@@ -1,0 +1,115 @@
+<?php
+include("database.php");
+
+try {
+    $conn = mysqli_connect($db_server, $db_user, $db_pass, $db_name);
+} catch(mysqli_sql_exception $e) {
+    echo "<div id='disconnected'>Database Connection Error: " . $e->getMessage() . "<br></div>";
+}
+
+if ($conn) {
+    echo "<div id='connected'>Database Status: Online</div>";
+} else {
+    echo "<div id='disconnected_Status'>Database Status: Offline</div>";
+}
+
+session_start();
+?>
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>JMCYK Login</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="css/Signin.css">
+    </head>
+    <body>
+        <div class="MainContainer">
+            <div class="login-box">
+                <br><br>
+                <h2 class="Login">LOGIN</h2>
+                <hr>
+                <br>
+                <form id="EmployeeLogin" action="index.php" method="post" novalidate>
+                    <label for="Username">Username:</label>
+                    <input type="text" id="Username" name="Username" placeholder="Username" required><br><br>
+
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" placeholder="●●●●●●●●●●" required>
+
+                    <br><br>
+                    <input type="submit" class="btn" name="login" value="Log In">
+                    <br><br>
+                </form>
+            </div>
+        </div>
+    </body>
+</html>
+
+<?php
+if(isset($_POST["login"])) {
+    // Sanitize inputs
+    $username = filter_input(INPUT_POST, "Username", FILTER_SANITIZE_SPECIAL_CHARS);
+    $password = $_POST['password'];
+    
+    // Prepared statement to prevent SQL injection
+    $stmt = $conn->prepare("SELECT users.*, user_types.type as role 
+                           FROM users 
+                           JOIN user_types ON users.type_id = user_types.id 
+                           WHERE username = ? AND is_active = 1");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if(!empty($username) && !empty($password)) {
+        if ($result->num_rows > 0) {
+            $user = $result->fetch_assoc();
+            
+            // Verify password
+            if (password_verify($password, $user['password'])) {
+                // Set session variables
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['username'] = $username;
+                $_SESSION['first_name'] = $user['first_name'];
+                $_SESSION['last_name'] = $user['last_name'];
+                $_SESSION['role'] = $user['role'];
+                $_SESSION['logged_in'] = true;
+                
+                // Redirect based on role
+                switch ($user['role']) {
+                    case 'employee':
+                        header("Location: home.php");
+                        break;
+                    case 'client':
+                        header("Location: clientview.php");
+                        break;
+                    case 'admin':
+                        header("Location: adminpage.php");
+                        break;
+                    default:
+                        echo '<div id="Missing">Unknown user role</div>';
+                }
+                exit();
+            } else {
+                echo '<div id="Missing">Invalid Password</div>';
+            }
+        } else {
+            echo '<div id="Missing">Username not found or account inactive</div>';
+        }
+    } else if (empty($username) && empty($password)) {
+        echo '<div id="Missing">Missing Username & Password</div>';
+    } else if(empty($username)) {
+        echo '<div id="Missing">Missing Username</div>';
+    } else if(empty($password)) {
+        echo '<div id="Missing">Missing Password</div>';
+    }
+    
+    $stmt->close();
+}
+
+// Close conn to db
+//$conn->close();
+?>

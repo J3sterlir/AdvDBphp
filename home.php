@@ -1,0 +1,74 @@
+<?php
+include("database.php");
+$conn = mysqli_connect($db_server, $db_user, $db_pass, $db_name);
+session_start();
+
+// Check if user is logged in (if user was assigned a session that macthes their credentials)
+if (!isset($_SESSION['user_id']) || 
+    !isset($_SESSION['username']) || 
+    !isset($_SESSION['logged_in']) || 
+    !isset($_SESSION['role']) ||  // Changed from 'roles' to 'role' to match our schema
+    $_SESSION['logged_in'] !== true) {
+    
+    // Destroy invalid session
+    session_unset();
+    session_destroy();
+    
+    // Redirect to login with error message
+    header("Location: index.php?error=session_invalid");
+    exit();
+}
+?>
+
+<?php
+include('Component/nav-head.php');
+?>
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Employee Home</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="css/Dashboard.css">
+        <link rel="stylesheet" href="css/TopNav.css">
+        
+        <style>
+            #sidebar ul li.activehome a{
+                color: var(--accent-clr);
+                background-color: var(--hover-clr);
+                
+                svg{
+                    fill: var(--accent-clr);
+                    
+                }
+            }
+        </style>
+    </head>
+    <body>
+        
+    </body>
+
+    <main>
+            <section>
+                <div id="Nav-container">
+                    <h1>JMCYK Client Management System</h1>
+                </div>
+            </section>
+
+            <div class="container">
+                <h1>Welcome to JMCYK Client Management System</h1>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsum assumenda error obcaecati dolores quis asperiores at nesciunt, veritatis similique quia veniam architecto rem necessitatibus labore blanditiis debitis incidunt soluta? Vel.</p>
+            </div>
+
+            <div class="container">
+                <h1>2nd Content</h1>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsum assumenda error obcaecati dolores quis asperiores at nesciunt, veritatis similique quia veniam architecto rem necessitatibus labore blanditiis debitis incidunt soluta? Vel.</p>
+            </div>
+    </main>
+    <script src="js/Dashboard.js" async defer></script>
+</html>
+
+
