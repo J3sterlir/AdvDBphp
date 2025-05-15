@@ -30,7 +30,7 @@ include('Component/nav-head.php');
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>File Tax Return</title>
+        <title>Input Receipt Information</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="css/Dashboard.css">
@@ -59,7 +59,7 @@ include('Component/nav-head.php');
                     </div>
                 </section>
                 <div class="container">
-                    <h1>Receipt Summarizer</h1>
+                    <h1>Input Receipt Information</h1>
                 </div>
 
                 <div class="container">
@@ -77,16 +77,7 @@ include('Component/nav-head.php');
                                     <div class="input-field">
                                         <label>Reference Number</label>
                                         <input type="text" placeholder="Enter PK reference number" required>
-                                    </div>
-                                    
-                                    <div class="input-field">
-                                        <label>Type of VAT</label>
-                                        <select required>
-                                            <option disabled selected>Select VAT type</option>
-                                            <option>VAT</option>
-                                            <option>NON VAT</option>
-                                        </select>
-                                    </div>
+        </div>
                                     
                                     <div class="input-field">
                                         <label>Date</label>

@@ -63,24 +63,5 @@ include('Component/nav-head.php');
                 <h1>About</h1><br>
                 <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsum assumenda error obcaecati dolores quis asperiores at nesciunt, veritatis similique quia veniam architecto rem necessitatibus labore blanditiis debitis incidunt soluta? Vel.</p>
             </div>
-
-            <div class="container">
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsum assumenda error obcaecati dolores quis asperiores at nesciunt, veritatis similique quia veniam architecto rem necessitatibus labore blanditiis debitis incidunt soluta? Vel.</p>
-            </div>
-
-            
-            <div class="container">
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsum assumenda error obcaecati dolores quis asperiores at nesciunt, veritatis similique quia veniam architecto rem necessitatibus labore blanditiis debitis incidunt soluta? Vel.</p>
-            </div>
-
-            
-            <div class="container">
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsum assumenda error obcaecati dolores quis asperiores at nesciunt, veritatis similique quia veniam architecto rem necessitatibus labore blanditiis debitis incidunt soluta? Vel.</p>
-            </div>
-
-            
-            <div class="container">
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsum assumenda error obcaecati dolores quis asperiores at nesciunt, veritatis similique quia veniam architecto rem necessitatibus labore blanditiis debitis incidunt soluta? Vel.</p>
-            </div>
     </main> 
 </html>

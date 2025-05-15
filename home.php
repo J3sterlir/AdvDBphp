@@ -34,6 +34,7 @@ include('Component/nav-head.php');
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="css/Dashboard.css">
         <link rel="stylesheet" href="css/TopNav.css">
+        <script src="js/Dashboard.js" async defer></script>
         
         <style>
             #sidebar ul li.activehome a{
@@ -54,21 +55,16 @@ include('Component/nav-head.php');
     <main>
             <section>
                 <div id="Nav-container">
-                    <h1>JMCYK Client Management System</h1>
+                    <h1>JMCYK Client Receipt Management System</h1>
                 </div>
             </section>
 
             <div class="container">
-                <h1>Welcome to JMCYK Client Management System</h1>
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsum assumenda error obcaecati dolores quis asperiores at nesciunt, veritatis similique quia veniam architecto rem necessitatibus labore blanditiis debitis incidunt soluta? Vel.</p>
-            </div>
-
-            <div class="container">
-                <h1>2nd Content</h1>
+                <h1>Welcome to JMCYK Client Receipt Management System</h1>
+                <br>
                 <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsum assumenda error obcaecati dolores quis asperiores at nesciunt, veritatis similique quia veniam architecto rem necessitatibus labore blanditiis debitis incidunt soluta? Vel.</p>
             </div>
     </main>
-    <script src="js/Dashboard.js" async defer></script>
 </html>
 
 

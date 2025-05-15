@@ -1,17 +1,18 @@
-.search-container{
+.search-container {
     border: 1px solid var(--line-clr);
     border-radius: 1em;
-    margin-bottom: 20px; margin-top: 45px;
+    margin-bottom: 20px; 
+    margin-top: 45px;
     padding: min(1em, 10%);
     padding-top: 25px;
 }
 
-#Clients{
+#Clients {
     margin-right: 60%;
     margin-top: -5px;
 }
 
-#search-results{
+#search-results {
     margin-bottom: 10px;
 }
 
@@ -27,6 +28,7 @@
     width: 300px;
     margin-top: -10px;
 }
+
 #search-button {
     padding: 10px 15px;
     margin-left: 5px;
@@ -37,11 +39,12 @@
     cursor: pointer;
     margin-top: -10px;
 }
+
 #search-button:hover {
     background-color: #4360b5;
 }
 
-#show-all{
+#show-all {
     padding: 0px 20px;
     margin-left: 5px;
     border: none;
@@ -54,6 +57,6 @@
     white-space: nowrap;
 }
 
-#show-all:hover{
+#show-all:hover {
     background-color: #4360b5;
 }

@@ -61,17 +61,18 @@ include('Component/nav-head.php');
                 <header>
                     <hr>
                     <br>
-                    <h3>Profile Details:</h3><br>
                 </header>
 
             <div class="container">
+                    <h3>Profile Details:</h3><br>
                     <img class="Profileimg" src="img/PROFILE.png" alt="Profile">
                     <p>First Name: <?php echo htmlspecialchars($_SESSION['first_name']); ?></p>
                     <p>Last Name: <?php echo htmlspecialchars($_SESSION['last_name']); ?></p>
                     <p>User ID: <?php echo $_SESSION['user_id']; ?></p>
             </div>
             <div class="container">
-                    <br>
+                <h3>Log In History:</h3>
+                <br>
                     <p class="lastlogin">Last login: <?php echo date('Y-m-d H:i:s'); ?></p>
             </div>
         </main>
