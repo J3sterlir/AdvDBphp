@@ -1,0 +1,21 @@
+
+.hidden {
+      display: none;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      font-family: Arial, sans-serif;
+    }
+    label {
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    select, input[type="date"] {
+      margin-right: 10px;
+      padding: 5px;
+      font-size: 1em;
+    }
+    .date-range-group {
+      margin: 10px 0;
+    }
