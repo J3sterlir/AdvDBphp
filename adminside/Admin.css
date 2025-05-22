@@ -1,0 +1,131 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+:root{
+    --background-color: #002d58;
+    --hover-clr: #3097ff3d;
+    --line-clr: #4c7db6;
+    --secondary-clr: #93f8ff;
+    --accent-clr: #00116e;
+    --Maintext-clr: #fff;
+}
+
+*{
+    margin: 0;
+    padding: 0;
+}
+html{
+    font-family: Montserrat;
+    line-height: 1.5rem;
+    overflow-x: hidden;
+}
+body{
+    background-color: var(--background-color);
+}
+.adminnav{
+    padding-top: 20px;
+    padding-bottom: 20px;
+    background-color: var(--Maintext-clr);
+    color: var(--background-color);
+    width: 100vw;
+    text-align: center;
+    position: sticky;
+    top: 0;
+}
+.container{
+    border: 1px solid var(--line-clr);
+    border-radius: 1em;
+    padding: min(3em, 15%);
+    margin-top: 20px;
+    color: var(--Maintext-clr);
+}
+.flexcontainer{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.flexcontainer > div{
+    border: 1px solid var(--line-clr);
+    border-radius: 1em;
+    padding: 20px;
+    font-size: 1rem;
+    width: 42rem;
+    margin: 20px;
+    gap: 20px;
+    color: var(--Maintext-clr);
+}
+
+.search-container {
+    border: 1px solid var(--line-clr);
+    border-radius: 1em;
+    padding: min(1em, 10%);
+    padding-top: 25px;
+}
+
+#search-results {
+    margin-bottom: 10px;
+}
+
+.search-box {
+    display: flex;
+    width: max-content;
+    margin-top: 20px;
+}
+
+#search-input {
+    padding: 10px;
+    border: 1px solid #2e4ead;
+    border-radius: 5px;
+    width: max-content;
+    margin-top: -10px;
+}
+
+#search-button {
+    padding: 10px 15px;
+    margin-left: 5px;
+    border: none;
+    background-color: #2e4ead;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: -10px;
+}
+
+#search-button:hover {
+    background-color: #4360b5;
+}
+
+#logoutbtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 45px;
+    width: 75%;
+    border: none;
+    outline: none;
+    color: #fff;
+    border-radius: 5px;
+    margin: 100px 7;
+    background-color: hsl(195, 100%, 37%);
+    cursor: pointer;
+}
+
+#logoutform svg{
+    padding: .57em;
+    align-items: center;
+}
+
+#logoutbtn:hover{
+    background-color: hsla(183, 30%, 77%, 0.836);
+    border-color: #4c7db6;
+    border-style: solid;
+    color: black;
+}
+.logout_container{
+    padding: 0px;
+}
+table,th,td{
+    border:1px solid rgb(255, 255, 255);
+}
+table{
+    margin-top: 20px;
+}
