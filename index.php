@@ -83,10 +83,10 @@ if (isset($_POST["login"])) {
                         header("Location: home.php");
                         break;
                     case 'client':
-                        header("Location: clientview.php");
+                        header("Location: clientside/clientview.php");
                         break;
                     case 'admin':
-                        header("Location: adminpage.php");
+                        header("Location: adminside/adminpage.php");
                         break;
                     default:
                         echo '<div id="Missing">Unknown user role</div>';
