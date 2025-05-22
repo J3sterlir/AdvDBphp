@@ -9,6 +9,7 @@ if(!isset($_SESSION['user_id']) || !isset($_SESSION['username']) || !isset($_SES
     header("Location: index.php"); //if not GTFO
     exit();
 }
+
 ?>
 <!DOCTYPE html>
 <html>

@@ -7,8 +7,8 @@
     }
 }
 
-form {
-    max-width: 500px;
+.settings-form {
+    max-width: 5000px;
     margin: auto;
     padding: 20px;
     background-color: #f9f9f9;
