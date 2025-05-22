@@ -1,11 +1,17 @@
 <?php
-// Inizialize session FIRST
+// Initialize session FIRST
 session_start();
 
-// Then include files (ensure they don't output anything)
+// Include database connection file (ensure it doesn't output anything)
 include("database.php");
 $conn = mysqli_connect($db_server, $db_user, $db_pass, $db_name);
 
+// Check if the connection was successful
+if (!$conn) {
+    die("Connection failed: " . mysqli_connect_error());
+}
+
+// Validate session
 if (!isset($_SESSION['user_id']) || 
     !isset($_SESSION['username']) || 
     !isset($_SESSION['logged_in']) || 
@@ -26,42 +32,38 @@ include('Component/nav-head.php');
 ?>
 
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>Employee Home</title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="css/Dashboard.css">
-        <link rel="stylesheet" href="css/TopNav.css">
-        <script src="js/Dashboard.js" async defer></script>
-        <style>
-            #sidebar ul li.activeabout a{
-                color: var(--accent-clr);
-                background-color: var(--hover-clr);
-                
-                svg{
-                    fill: var(--accent-clr);
-                    
-                }
-            }
-        </style>
-    </head>
-    <body>
-        
-    </body>
-
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Employee Home</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/Dashboard.css">
+    <link rel="stylesheet" href="css/TopNav.css">
+    <script src="js/Dashboard.js" async defer></script>
+    <style>
+        #sidebar ul li.activeabout a {
+            color: var(--accent-clr);
+            background-color: var(--hover-clr);
+        }
+        #sidebar ul li.activeabout a svg {
+            fill: var(--accent-clr);
+        }
+    </style>
+</head>
+<body>
     <main>
-            <section>
-                <div id="Nav-container">
-                    <h1>JMCYK Client Management System</h1>
-                </div>
-            </section>
-
-            <div class="container">
-                <h1>About</h1><br>
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsum assumenda error obcaecati dolores quis asperiores at nesciunt, veritatis similique quia veniam architecto rem necessitatibus labore blanditiis debitis incidunt soluta? Vel.</p>
+        <section>
+            <div id="Nav-container">
+                <h1>JMCYK Client Management System</h1>
             </div>
+        </section>
+
+        <div class="container">
+            <h1>About</h1><br>
+            <p>JMCYK Bookkeeping Services is a company that manages financial transactions of taxpayers.</p>
+        </div>
     </main> 
+</body>
 </html>

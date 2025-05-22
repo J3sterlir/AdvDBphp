@@ -60,9 +60,16 @@ include('Component/nav-head.php');
             </section>
 
             <div class="container">
-                <h1>Welcome to JMCYK Client Receipt Management System</h1>
+            <h1>Welcome Back, <?php echo htmlspecialchars($_SESSION['first_name']); ?>!</h1>
+            <br><hr>
                 <br>
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsum assumenda error obcaecati dolores quis asperiores at nesciunt, veritatis similique quia veniam architecto rem necessitatibus labore blanditiis debitis incidunt soluta? Vel.</p>
+                <h2>Available Services: </h2>
+                <br>
+                <ul>
+                    <li>Receipt Summary Generator</li>
+                    <li>View Client Information</li>
+                    <li>View Added Receipts History</li>
+                </ul>
             </div>
     </main>
 </html>

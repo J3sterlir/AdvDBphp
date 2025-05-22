@@ -4,10 +4,12 @@ session_start();
 include("database.php");
 $conn = mysqli_connect($db_server, $db_user, $db_pass, $db_name);
 
+// Check if the connection was successful
 if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
 }
 
+// Check session validity
 if (!isset($_SESSION['user_id']) || 
     !isset($_SESSION['username']) || 
     !isset($_SESSION['logged_in']) || 
@@ -28,15 +30,14 @@ $error_msg = "";
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Sanitize inputs
     $new_username = trim($_POST['username'] ?? '');
-    $new_first_name = trim($_POST['first_name'] ?? '');
-    $new_last_name = trim($_POST['last_name'] ?? '');
+    $new_name = trim($_POST['name'] ?? '');
     $current_password = $_POST['current_password'] ?? '';
     $new_password = $_POST['new_password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
 
     // Basic validation
-    if (empty($new_username) || empty($new_first_name) || empty($new_last_name)) {
-        $error_msg = "Username, First Name, and Last Name cannot be empty.";
+    if (empty($new_username) || empty($new_name)) {
+        $error_msg = "Username and Name cannot be empty.";
     } else {
         // Fetch current password hash
         $sql = "SELECT password FROM users WHERE id = ?";
@@ -63,10 +64,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (empty($error_msg)) {
-            // Update username, first_name, last_name
-            $sql_update = "UPDATE users SET username = ?, first_name = ?, last_name = ? WHERE id = ?";
+            // Update username and name
+            $sql_update = "UPDATE users SET username = ?, name = ? WHERE id = ?";
             $stmt_update = mysqli_prepare($conn, $sql_update);
-            mysqli_stmt_bind_param($stmt_update, "sssi", $new_username, $new_first_name, $new_last_name, $user_id);
+            mysqli_stmt_bind_param($stmt_update, "ssi", $new_username, $new_name, $user_id);
             $update_success = mysqli_stmt_execute($stmt_update);
             mysqli_stmt_close($stmt_update);
 
@@ -88,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $success_msg = "Profile updated successfully.";
                 }
 
-                $_SESSION['username'] = $new_username;
+                $_SESSION['username'] = $new_username; // Update session username
             } else {
                 $error_msg = "Failed to update profile.";
             }
@@ -97,11 +98,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Fetch current user info
-$sql = "SELECT username, first_name, last_name FROM users WHERE id = ?";
+$sql = "SELECT username, name FROM users WHERE id = ?";
 $stmt = mysqli_prepare($conn, $sql);
 mysqli_stmt_bind_param($stmt, "i", $user_id);
 mysqli_stmt_execute($stmt);
-mysqli_stmt_bind_result($stmt, $current_username, $current_first_name, $current_last_name);
+mysqli_stmt_bind_result($stmt, $current_username, $current_name);
 mysqli_stmt_fetch($stmt);
 mysqli_stmt_close($stmt);
 
@@ -120,17 +121,15 @@ include('Component/nav-head.php');
     <link rel="stylesheet" href="css/settings.css" />
     <script src="js/Dashboard.js" async defer></script>
     <script src="js/settings.js"></script>
-   
 </head>
-   <body>
-       <main>
-           <section>
-               <div id="Nav-container">
-                   <h1>JMCYK Client Management System</h1>
-               </div>
-           </section>
+<body>
+    <main>
+        <section>
+            <div id="Nav-container">
+                <h1>JMCYK Client Management System</h1>
+            </div>
+        </section>
 
-        <div class="container">
             <h1>Settings</h1>
             <br>
             <?php if ($success_msg): ?>
@@ -145,17 +144,13 @@ include('Component/nav-head.php');
                 <span class="tab-link" data-tab="terms" role="tab" tabindex="0" aria-selected="false">Terms & Conditions</span>
                 <span class="tab-link" data-tab="info" role="tab" tabindex="0" aria-selected="false">Help & FAQs</span>
             </div>
-
             <div class="tab-content active" id="account" role="tabpanel">
-                <form id="settingsForm" method="post" action="settings.php" novalidate>
+                <form class="settings-form" id="settingsForm" method="post" action="settings.php" novalidate>
                     <label for="username">Username</label>
                     <input type="text" id="username" name="username" required value="<?php echo htmlspecialchars($current_username); ?>" />
 
-                    <label for="first_name">First Name</label>
-                    <input type="text" id="first_name" name="first_name" required value="<?php echo htmlspecialchars($current_first_name); ?>" />
-
-                    <label for="last_name">Last Name</label>
-                    <input type="text" id="last_name" name="last_name" required value="<?php echo htmlspecialchars($current_last_name); ?>" />
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" required value="<?php echo htmlspecialchars($current_name); ?>" />
 
                     <hr style="margin-top: 30px; margin-bottom: 30px;" />
 
@@ -195,19 +190,17 @@ include('Component/nav-head.php');
                 <br>
                 <p>
                     JMCYK Client Management System v1.0<br />
-                    Developed by Your Team.<br />
-                    For support, contact: support@example.com<br /><br />
+                    Developed by Lirag-Madera.<br />
+                    For support, contact: Maricel M. Brioso<br /><br />
                     <strong>Frequently Asked Questions:</strong>
                     <br>
                     <ul>
-                        <strong>How to reset my password?</strong> Use the 'Change Password' section under Account Settings.<br />
-                        <strong>Who do I contact for assistance?</strong> Reach out to support@example.com for any questions.<br />
+                        <strong>How to create changes in my account?</strong> Refer to the Account Settings tab as it contains fields to edit on.<br />
+                        <strong>Who do I contact for assistance?</strong> Reach out to Maricel M. Brioso for any questions.<br />
                         <strong>Where can I find terms and conditions?</strong> Please refer to the 'Terms & Conditions' tab.
                     </ul>
                 </p>
             </div>
-        </div>
     </main>
 </body>
 </html>
-

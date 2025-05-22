@@ -18,8 +18,7 @@ html{
     overflow-x: hidden;
 }
 #Nav-container{
-    background: #93F8FF;
-    background: linear-gradient(90deg,rgba(147, 248, 255, 1) 55%, rgba(147, 248, 255, 0) 100%);
+    background: #ffffff;
     border-radius: none;
     margin-bottom: 50px; margin-top: -30.5px; margin-left: -32px;
     position: sticky;
