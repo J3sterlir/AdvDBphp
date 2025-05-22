@@ -4175,7 +4175,7 @@ fieldset:disabled .btn {
     border-top-left-radius: 0;
     border-top-right-radius: 0
 }
-
+/*
 .nav {
     --bs-nav-link-padding-x: 1rem;
     --bs-nav-link-padding-y: 0.5rem;
@@ -4199,6 +4199,7 @@ fieldset:disabled .btn {
     text-decoration: none;
     transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out
 }
+*/
 
 @media (prefers-reduced-motion:reduce) {
     .nav-link {

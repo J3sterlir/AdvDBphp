@@ -30,6 +30,11 @@ body{
     position: sticky;
     top: 0;
 }
+.adminnav h1{
+    display: flex;
+    justify-content: center;
+    font-size: 1rem;
+}
 .container{
     border: 1px solid var(--line-clr);
     border-radius: 1em;
