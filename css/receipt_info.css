@@ -110,7 +110,7 @@ table {
 
 /* Table header styling */
 thead {
-    background-color: #4CAF50; /* Green background for the header */
+    background-color: hsla(195, 100%, 37%, 0.795); /* Green background for the header */
     color: white; /* White text color */
 }
 
