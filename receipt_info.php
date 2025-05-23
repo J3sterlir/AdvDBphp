@@ -342,6 +342,7 @@ include('Component/nav-head.php');
                 <?php endif; ?>
 
                 <input type="hidden" name="active_tab" value="generate-summary">
+                <label>Client ID</label>
                 <div class="input-field">
                     <input type="text" name="client_id" placeholder="Enter client id to generate summary from" value="<?php echo isset($_GET['client_id']) ? htmlspecialchars($_GET['client_id']) : ''; ?>" required>
                 </div><br>
@@ -485,6 +486,7 @@ include('Component/nav-head.php');
 
             <form action="receipt_info.php" method="GET" style="margin-bottom: 1em;">
                 <input type="hidden" name="active_tab" value="receipt-history">
+                <label>Client ID</label>
                 <input type="text" name="client_id" placeholder="Enter client ID to view history" value="<?php echo isset($_GET['client_id']) ? htmlspecialchars($_GET['client_id']) : ''; ?>" required>
                 <button type="submit" name="view_history">
                     View Receipt History
@@ -508,7 +510,7 @@ include('Component/nav-head.php');
                                 <td class="cell-id"><?php echo htmlspecialchars($receipt['id']); ?></td>
                                 <td class="cell-supplier"><?php echo htmlspecialchars($receipt['supplier']); ?></td>
                                 <td class="cell-date"><?php echo htmlspecialchars($receipt['receipt_date']); ?></td>
-                                <td class="cell-total"><?php echo htmlspecialchars(number_format($receipt['total'], 2)); ?></td>
+                                <td class="cell-total"><?php echo '₱' . htmlspecialchars(number_format($receipt['total'], 2)); ?></td>
                                 <td class="cell-actions">
                                     <button class="edit" type="button" onclick="enableEdit('<?php echo htmlspecialchars($receipt['id']); ?>')">Edit</button>
                                     <form method="POST" class="inline-form" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this receipt?');">
