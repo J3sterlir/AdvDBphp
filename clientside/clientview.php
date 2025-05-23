@@ -92,7 +92,7 @@ if (isset($_POST["logout"])) {
                         <tr>
                             <td><?php echo htmlspecialchars($receipt['id']); ?></td>
                             <td><?php echo htmlspecialchars($receipt['receipt_date']); ?></td>
-                            <td><?php echo '$' . number_format($receipt['total'], 2); ?></td>
+                            <td><?php echo '₱' . number_format($receipt['total'], 2); ?></td>
                             <td><?php echo htmlspecialchars($receipt['supplier'] ?? 'N/A'); ?></td>
                         </tr>
                         <?php endwhile; ?>

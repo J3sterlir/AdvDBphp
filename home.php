@@ -58,8 +58,7 @@ include('Component/nav-head.php');
             <h1>Welcome Back, <?php echo htmlspecialchars($_SESSION['first_name']); ?>!</h1>
             <br><hr>
                 <br>
-                <h2>Available Services: </h2>
-                <br>
+                <h2>Available Services</h2><br>
                 <ul>
                     <li>Receipt Summary Generator</li>
                     <li>View Client Information</li>
