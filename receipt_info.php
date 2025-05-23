@@ -436,7 +436,7 @@ include('Component/nav-head.php');
                     <tbody>
                         <tr>
                             <td><?php echo htmlspecialchars($total_receipts); ?></td>
-                            <td><?php echo htmlspecialchars(number_format($total_amount, 2)); ?></td>
+                            <td><?php echo '₱' . htmlspecialchars(number_format($total_amount, 2)); ?></td>
                         </tr>
                     </tbody>
                 </table>
@@ -457,7 +457,7 @@ include('Component/nav-head.php');
                                     <td><?php echo htmlspecialchars($receipt['id']); ?></td>
                                     <td><?php echo htmlspecialchars($receipt['supplier']); ?></td>
                                     <td><?php echo htmlspecialchars($receipt['receipt_date']); ?></td>
-                                    <td><?php echo htmlspecialchars(number_format($receipt['total'], 2)); ?></td>
+                                    <td><?php echo '₱' . htmlspecialchars(number_format($receipt['total'], 2)); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
