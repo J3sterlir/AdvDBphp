@@ -174,7 +174,7 @@ include('Component/nav-head.php');
                 </form>
             </div>
 
-            <div class="tab-content" id="terms" role="tabpanel" hidden>
+            <div class="tab-content" id="terms" role="tabpanel" hidden style="padding: 30px;">
                 <h2>Terms & Conditions</h2>
                 <br>
                 <p>
@@ -191,7 +191,7 @@ include('Component/nav-head.php');
                 </p>
             </div>
 
-            <div class="tab-content" id="info" role="tabpanel" hidden>
+            <div class="tab-content" id="info" role="tabpanel" hidden style="padding: 30px;">
                 <h2>Help and FAQ's</h2>
                 <br>
                 <p>

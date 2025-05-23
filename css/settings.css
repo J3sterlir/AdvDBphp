@@ -1,7 +1,4 @@
 .settings-form {
-
-    max-width: 5000px;
-    margin: auto;
     padding: 20px;
     background-color: #f9f9f9;
     border-radius: 8px;
@@ -79,7 +76,7 @@ input[type="submit"]:hover {
   }
   .tab-content.active {
       display: block;
-      padding: 20px;
+      margin-top: 20px;;
   }
 
   h3 {
