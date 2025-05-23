@@ -146,6 +146,17 @@ $users = $result->fetch_all(MYSQLI_ASSOC);
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Admin Panel</title>
 <link rel="stylesheet" href="css/Admin.css">
+
+<script>
+function validateForm() {
+  let x = document.forms["searchfunciton"]["search"].value;
+  if (x == "") {
+    alert("Empty search");
+    return false;
+  }
+}
+</script>
+
 </head>
 
 <body>
@@ -157,7 +168,7 @@ $users = $result->fetch_all(MYSQLI_ASSOC);
 
     <div class="flexcontainer">
         <div class="header-contain">
-            <h1>Welcome Admin</h1>
+            <h1>Welcome, <?php echo htmlspecialchars($_SESSION['first_name']); ?>!</h1>
             <br>
             <p>Manage Your Users Here</p>
             <br>
@@ -169,7 +180,7 @@ $users = $result->fetch_all(MYSQLI_ASSOC);
 
 
 <div class="flexcontainer">
-<div class="container">
+<div class="header-contain">
     <h1><?= $editUser  ? 'Edit User' : 'Create User' ?></h1>
     <br>
     <hr>
@@ -222,7 +233,7 @@ $users = $result->fetch_all(MYSQLI_ASSOC);
     <h2>User List</h2>
     <br>
 
-    <form class="search-bar" method="GET" action="">
+    <form name="searchfunciton" class="search-bar" onsubmit="return validateForm()" method="GET" action="adminpage.php">
         <input type="text" name="search" placeholder="Search by name, email, username..." value="<?= htmlspecialchars($search) ?>">
         <button class="searchbutton" type="submit">Search</button>
         <?php if ($search !== ''): ?>
@@ -232,7 +243,22 @@ $users = $result->fetch_all(MYSQLI_ASSOC);
 
     <?php if (empty($users)): ?>
         <p>No users found.</p>
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Type ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone Number</th>
+                <th>Username</th>
+                <th>Active</th>
+                <th class="actions">Actions</th>
+            </tr>
+        </thead>
+        </table>
     <?php else: ?>
+        
     <div class="flexcontainer">
     <table>
         <thead>

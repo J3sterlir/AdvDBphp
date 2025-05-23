@@ -1,12 +1,46 @@
 <?php
-include("database.php");
+include("../database.php");
 $conn = mysqli_connect($db_server, $db_user, $db_pass, $db_name);
+
 session_start();
 
+// Log checker
+if (!isset($_SESSION['user_id']) || 
+    !isset($_SESSION['username']) || 
+    !isset($_SESSION['logged_in']) || 
+    !isset($_SESSION['role']) ||  
+    $_SESSION['logged_in'] !== true) {
+    
+    // Destroy if log invalid
+    session_unset();
+    session_destroy();
+    
+    // Login err handling
+    header("Location: ../index.php?error=session_invalid");
+    exit();
+}
 
-// Check if user is logged in (if user was assigned a session that macthes their credentials)
-if(!isset($_SESSION['user_id']) || !isset($_SESSION['username']) || !isset($_SESSION['logged_in']) || !isset($_SESSION['roles'])) {
-    header("Location: index.php"); //if not GTFO
+// Getting user id
+$user_id = $_SESSION['user_id'];
+
+// fetching rec for specific user
+$receipts_query = "SELECT * FROM receipts WHERE client_id = '$user_id' ORDER BY receipt_date DESC";
+$receipts_result = mysqli_query($conn, $receipts_query);
+
+// Logout func
+if (isset($_POST["logout"])) {
+    // Logout func proper
+    session_regenerate_id(true);
+    $_SESSION = [];
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000,
+            $params["path"], $params["domain"],
+            $params["secure"], $params["httponly"]
+        );
+    }
+    session_destroy();
+    header("Location: ../index.php");
     exit();
 }
 
@@ -16,49 +50,65 @@ if(!isset($_SESSION['user_id']) || !isset($_SESSION['username']) || !isset($_SES
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>Client View</title>
+        <title>Client Page</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../clientside/css/Client.css">
     </head>
     <body>
-        <h1>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h1>
-        
-        <!-- Display user information -->
-        <div class="user-info">
-            <p>User ID: <?php echo $_SESSION['user_id']; ?></p>
-            <p>Username: <?php echo htmlspecialchars($_SESSION['username']); ?></p>
-            <p>Last login: <?php echo date('Y-m-d H:i:s'); ?></p>
-        </div>
-        
-        <!-- Logout form -->
-        <form action="clientview.php" method="post">
-            <input type="submit" name="logout" value="Logout">
-        </form>
-        
-    </body>
 
-    
+        <header>
+            <nav class="clientnnav">
+                <h1>JMCYK Client Page</h1>
+            </nav>
+        </header>
+
+        <div class="flexcontainer">
+            <div class="header-contain">
+                <h1>Welcome, <?php echo htmlspecialchars($_SESSION['first_name']); ?>!</h1>
+                <br>
+                <p>View Your Receipts Here</p>
+                <br>
+                <form action="clientview.php" method="post" id="logoutform" class="formbutton">
+                    <input type="submit" name="logout" value="   ⬅  Logout" id="logoutbtn">
+                </form>
+            </div>
+        </div>
+
+        <?php if(mysqli_num_rows($receipts_result) > 0): ?>
+        <div class="flexcontainer">
+            <div class="header-contain">
+                <table style="color: black">
+                    <thead>
+                        <tr>
+                            <th>Receipt ID</th>
+                            <th>Date</th>
+                            <th>Total Amount</th>
+                            <th>Supplier</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php while($receipt = mysqli_fetch_assoc($receipts_result)): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($receipt['id']); ?></td>
+                            <td><?php echo htmlspecialchars($receipt['receipt_date']); ?></td>
+                            <td><?php echo '$' . number_format($receipt['total'], 2); ?></td>
+                            <td><?php echo htmlspecialchars($receipt['supplier'] ?? 'N/A'); ?></td>
+                        </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+                <?php else: ?>
+                <div class="no-receipts">
+                    <p>No receipts found for your account.</p>
+                </div>
+                <?php endif; ?>
+                </div>
+        </div>
+    </body>
 </html>
 
 <?php
-        if(isset($_POST["logout"])){
-            // Clear session data
-            $_SESSION = array();
-            
-            // Delete session cookie
-            if (ini_get("session.use_cookies")) {
-                $params = session_get_cookie_params();
-                setcookie(session_name(), '', time() - 42000,
-                    $params["path"], $params["domain"],
-                    $params["secure"], $params["httponly"]
-                );
-            }
-            
-            
-            session_destroy(); //End Current Session
-            
-            
-            header("Location: index.php"); //back to login
-            exit();
-        }
+// Close database connection
+mysqli_close($conn);
 ?>

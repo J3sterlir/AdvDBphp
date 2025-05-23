@@ -252,11 +252,17 @@ include('Component/nav-head.php');
     <script src="js/Dashboard.js"></script>
     <script src="js/receipt_info.js"></script>
 </head>
+    <style>
+        #sidebar ul li.activereceipts a {
+            color: var(--accent-clr);
+            background-color: var(--hover-clr);
+        }
+    </style>
 <body>
     <main>
         <section class="section-1">
             <div id="Nav-container">
-                <h1>JMCYK Client Receipt Management System</h1>
+                <h1>JMCYK Client & Receipts Management System</h1>
             </div>
         </section>
 
