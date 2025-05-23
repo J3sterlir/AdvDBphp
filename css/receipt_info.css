@@ -11,8 +11,13 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+.desc {
+    color: rgba(0, 45, 88, 0.938);
+}
+
 label {
     font-weight: bold;
+    font-size: 1.0rem;
     margin-right: 10px;
     color: rgba(0, 45, 88, 0.938);
 }
@@ -139,11 +144,62 @@ tbody tr:hover {
     }
 }
 
-button.edit {background-color: #1976d2;}
-button.edit:hover {background-color: #0d47a1;}
-button.delete {background-color: #d32f2f;}
-button.delete:hover {background-color: #9a0007;}
-button.save {background-color: #388e3c;}
-button.save:hover {background-color: #1b5e20;}
-button.cancel {background-color: #757575;}
-button.cancel:hover {background-color: #494949;}
+button {
+margin-top: 20px;
+    padding: 10px 15px;
+    font-family: Montserrat;
+    background-color: var(--accent-clr);
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    border-radius: 4px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+button.edit {
+    background-color: #1976d2;
+}
+button.edit:hover {
+    background-color: #0d47a1;
+}
+button.delete {
+    background-color: #d32f2f;
+}
+button.delete:hover {
+    background-color: #9a0007;
+}
+button.save {
+    background-color: #388e3c;
+}
+button.save:hover {
+    background-color: #1b5e20;
+}
+button.cancel {
+    background-color: #757575;
+}
+button.cancel:hover {
+    background-color: #494949;
+}
+
+#monthly-options {
+    display: flex;
+    gap: 1em; /* space between inputs */
+    align-items: center;
+}
+#monthly-options .date-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5em;
+}
+
+#annual-options, #quarterly-options, #monthly-options, #custom-options {
+    margin-bottom: 1em;
+}
+.date-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5em;
+}

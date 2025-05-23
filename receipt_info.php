@@ -18,30 +18,76 @@ $success = false;
 $error = "";
 $receipts = [];
 
-// Handle form submission for adding new receipts
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] === 'add') {
-    $id = trim($_POST['id']);
-    $client_id = trim($_POST['client_id']);
-    $supplier = trim($_POST['supplier']);
-    $receipt_date = trim($_POST['receipt_date']);
-    $total = floatval($_POST['total']);
-
-    if ($client_id && $id && $supplier && $receipt_date && $total > 0) {
-        $stmt = $conn->prepare("INSERT INTO receipts (id, client_id, supplier, receipt_date, total) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssd", $id, $client_id, $supplier, $receipt_date, $total);
-
-        if ($stmt->execute()) {
-            $success = true;
-        } else {
-            $error = "Database error: " . $stmt->error;
-        }
-        $stmt->close();
-    } else {
-        $error = "Please fill in all fields and enter a valid amount.";
+$successMessage = "";
+if (isset($_GET['success'])) {
+    if ($_GET['success'] === 'add') {
+        $successMessage = "Receipt successfully added.";
+    } elseif ($_GET['success'] === 'edit') {
+        $successMessage = "Receipt successfully edited.";
+    } elseif ($_GET['success'] === 'delete') {
+        $successMessage = "Receipt successfully deleted.";
     }
 }
 
-// Handle inline edit update
+function clientExists($conn, $client_id) {
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM users WHERE id = ? AND type_id = 3");
+    if (!$stmt) {
+        error_log("Prepare failed: " . $conn->error);
+        return false;
+    }
+    $stmt->bind_param("s", $client_id);
+    $stmt->execute();
+    $stmt->bind_result($exists);
+    $stmt->fetch();
+    $stmt->close();
+
+    error_log("Checking client ID: " . $client_id . " - Exists: " . $exists);
+
+    return $exists > 0;
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] === 'add') {
+    $client_id = trim($_POST['client_id']);
+    if (!$client_id || !clientExists($conn, $client_id)) {
+        $error = "User ID is not from a client or user does not exist.";
+    }
+}
+
+if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET['generate_summary'])) {
+    $client_id = trim($_GET['client_id'] ?? '');
+    if (!$client_id || !clientExists($conn, $client_id)) {
+        $error = "User ID is not from a client or user does not exist.";
+    }
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] === 'add') {
+    $client_id = trim($_POST['client_id']);
+    if (!$client_id || !clientExists($conn, $client_id)) {
+        $error = "User  ID is not from a client or user does not exist.";
+    } else {
+        // Proceed with adding the receipt only if there is no error
+        $id = trim($_POST['id']);
+        $supplier = trim($_POST['supplier']);
+        $receipt_date = trim($_POST['receipt_date']);
+        $total = floatval($_POST['total']);
+
+        if ($client_id && $id && $supplier && $receipt_date && $total > 0) {
+            $stmt = $conn->prepare("INSERT INTO receipts (id, client_id, supplier, receipt_date, total) VALUES (?, ?, ?, ?, ?)");
+            $stmt->bind_param("ssssd", $id, $client_id, $supplier, $receipt_date, $total);
+
+            if ($stmt->execute()) {
+                header("Location: receipt_info.php?client_id=" . urlencode($client_id) . "&active_tab=receipt-history&success=add&view_history=1");
+                exit();
+            } else {
+                $error = "Database error: " ;
+            }
+            $stmt->close();
+        } else {
+            $error = "Please fill in all fields and enter a valid amount.";
+        }
+    }
+}
+
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'edit') {
     $edit_id = trim($_POST['edit_id'] ?? '');
     $edit_supplier = isset($_POST['edit_supplier']) ? trim($_POST['edit_supplier']) : '';
@@ -49,50 +95,135 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['
     $edit_total = isset($_POST['edit_total']) ? floatval($_POST['edit_total']) : 0;
 
     if ($edit_id && $edit_supplier && $edit_receipt_date && $edit_total > 0) {
-        $stmt = $conn->prepare("UPDATE receipts SET supplier = ?, receipt_date = ?, total = ? WHERE id = ?");
-        $stmt->bind_param("ssds", $edit_supplier, $edit_receipt_date, $edit_total, $edit_id);
+        $stmtClient = $conn->prepare("SELECT client_id FROM receipts WHERE id = ?");
+        $stmtClient->bind_param("s", $edit_id);
+        $stmtClient->execute();
+        $resultClient = $stmtClient->get_result();
+        $client_id_row = $resultClient->fetch_assoc();
+        $stmtClient->close();
+        $client_id = $client_id_row['client_id'] ?? '';
 
-        if ($stmt->execute()) {
-            $success = true;
+        if (clientExists($conn, $client_id)) {
+            $stmt = $conn->prepare("UPDATE receipts SET supplier = ?, receipt_date = ?, total = ? WHERE id = ?");
+            $stmt->bind_param("ssds", $edit_supplier, $edit_receipt_date, $edit_total, $edit_id);
+
+            if ($stmt->execute()) {
+                header("Location: receipt_info.php?client_id=" . urlencode($client_id) . "&active_tab=receipt-history&success=edit&view_history=1");
+                exit();
+            } else {
+                $error = "Database error (update): " . $stmt->error;
+            }
+            $stmt->close();
         } else {
-            $error = "Database error (update): " . $stmt->error;
+            $error = "User  ID is not from a client or user does not exist.";
         }
-        $stmt->close();
     } else {
         $error = "Please fill in all fields when editing and enter a valid amount.";
     }
 }
 
-// Handle delete receipt
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'delete') {
     $delete_id = trim($_POST['delete_id']);
     if ($delete_id) {
-        $stmt = $conn->prepare("DELETE FROM receipts WHERE id = ?");
-        $stmt->bind_param("s", $delete_id);
+        $stmtClient = $conn->prepare("SELECT client_id FROM receipts WHERE id = ?");
+        $stmtClient->bind_param("s", $delete_id);
+        $stmtClient->execute();
+        $resultClient = $stmtClient->get_result();
+        $client_id_row = $resultClient->fetch_assoc();
+        $stmtClient->close();
+        $client_id = $client_id_row['client_id'] ?? '';
 
-        if ($stmt->execute()) {
-            $success = true;
+        if (clientExists($conn, $client_id)) {
+            $stmt = $conn->prepare("DELETE FROM receipts WHERE id = ?");
+            $stmt->bind_param("s", $delete_id);
+
+            if ($stmt->execute()) {
+                header("Location: receipt_info.php?client_id=" . urlencode($client_id) . "&active_tab=receipt-history&success=delete&view_history=1");
+                exit();
+            } else {
+                $error = "Database error (delete): " . $stmt->error;
+            }
+            $stmt->close();
         } else {
-            $error = "Database error (delete): " . $stmt->error;
+            $error = "User  ID is not from a client or user does not exist.";
         }
-        $stmt->close();
     } else {
         $error = "Invalid receipt ID for deletion.";
     }
 }
 
-// Handle GET requests for viewing history
 if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['view_history'])) {
     $client_id = trim($_GET['client_id']);
     if ($client_id) {
-        $stmt = $conn->prepare("SELECT id, supplier, receipt_date, total, client_id FROM receipts WHERE client_id = ?");
-        $stmt->bind_param("s", $client_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $receipts = $result->fetch_all(MYSQLI_ASSOC);
-        $stmt->close();
+        if (clientExists($conn, $client_id)) {
+            $stmt = $conn->prepare("SELECT id, supplier, receipt_date, total, client_id FROM receipts WHERE client_id = ?");
+            $stmt->bind_param("s", $client_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $receipts = $result->fetch_all(MYSQLI_ASSOC);
+            $stmt->close();
+        } else {
+            $error = "User  ID is not from a client or user does not exist.";
+        }
     } else {
         $error = "Please provide a valid client ID.";
+    }
+}
+
+$summary_receipts = [];
+$total_receipts = 0;
+$total_amount = 0.00;
+
+if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET['generate_summary']) && !$error) {
+    $client_id = trim($_GET['client_id'] ?? '');
+    $summary_type = $_GET['summary_type'] ?? '';
+    $year = $_GET['year'] ?? '';
+    $quarter = $_GET['quarter'] ?? '';
+    $month = $_GET['month'] ?? '';
+    $from_date = $_GET['from_date'] ?? '';
+    $to_date = $_GET['to_date'] ?? '';
+
+    if ($client_id && $summary_type) {
+        if ($summary_type === 'annual' && $year) {
+            $stmt = $conn->prepare("SELECT id, supplier, receipt_date, total FROM receipts WHERE client_id = ? AND YEAR(receipt_date) = ?");
+            $stmt->bind_param("ss", $client_id, $year);
+        } elseif ($summary_type === 'quarterly' && $year && $quarter) {
+            $quarter_months = [
+                1 => ['start' => '01', 'end' => '03'],
+                2 => ['start' => '04', 'end' => '06'],
+                3 => ['start' => '07', 'end' => '09'],
+                4 => ['start' => '10', 'end' => '12'],
+            ];
+            $start_month = $quarter_months[$quarter]['start'];
+            $end_month = $quarter_months[$quarter]['end'];
+            $start_date = "$year-$start_month-01";
+            $end_date = date("Y-m-t", strtotime("$year-$end_month-01"));
+            $stmt = $conn->prepare("SELECT id, supplier, receipt_date, total FROM receipts WHERE client_id = ? AND receipt_date BETWEEN ? AND ?");
+            $stmt->bind_param("sss", $client_id, $start_date, $end_date);
+        } elseif ($summary_type === 'monthly' && $year && $month) {
+            $start_date = "$year-$month-01";
+            $end_date = date("Y-m-t", strtotime($start_date));
+            $stmt = $conn->prepare("SELECT id, supplier, receipt_date, total FROM receipts WHERE client_id = ? AND receipt_date BETWEEN ? AND ?");
+            $stmt->bind_param("sss", $client_id, $start_date, $end_date);
+        } elseif ($summary_type === 'custom' && $from_date && $to_date) {
+            $stmt = $conn->prepare("SELECT id, supplier, receipt_date, total FROM receipts WHERE client_id = ? AND receipt_date BETWEEN ? AND ?");
+            $stmt->bind_param("sss", $client_id, $from_date, $to_date);
+        } else {
+            $stmt = null;
+        }
+
+        if (isset($stmt) && $stmt) {
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $summary_receipts = $result->fetch_all(MYSQLI_ASSOC);
+            $stmt->close();
+
+            $total_receipts = count($summary_receipts);
+            $total_amount = 0.00;
+            foreach ($summary_receipts as $row) {
+                $total_amount += floatval($row['total']);
+            }
+        }
     }
 }
 
@@ -108,8 +239,8 @@ include('Component/nav-head.php');
     <link rel="stylesheet" href="css/Dashboard.css">
     <link rel="stylesheet" href="css/TopNav.css">
     <link rel="stylesheet" href="css/receipt_info.css">
+    <script src="Dashboard.js"></script>
     <script src="js/receipt_info.js"></script>
-
 </head>
 <body>
     <main>
@@ -120,86 +251,234 @@ include('Component/nav-head.php');
         </section>
 
         <h1>Receipt Information</h1>
-        <p>Manage receipts here!</p><br>
-
-        <div class="input-field">
-            <h2>Client ID</h2><br>
-            <input type="text" name="client_id" placeholder="Enter client id" value="<?php echo isset($_POST['client_id']) ? htmlspecialchars($_POST['client_id']) : (isset($_GET['client_id']) ? htmlspecialchars($_GET['client_id']) : ''); ?>">
-        </div><br>
+        <p class type="sub-title">Manage receipts here!</p><br>
 
         <div class="tabs" role="tablist" aria-label="Receipt Tabs">
-            <span class="tab-link active" data-tab="input-details" role="tab" tabindex="0" aria-selected="true">Input Receipt Details</span>
-            <span class="tab-link" data-tab="generate-summary" role="tab" tabindex="0" aria-selected="false">Generate Receipt Summary</span>
-            <span class="tab-link" data-tab="receipt-history" role="tab" tabindex="0" aria-selected="false">Receipt History</span>
+            <span class="tab-link<?php if ((!isset($_GET['active_tab'])) || $_GET['active_tab'] === 'input-details') echo ' active'; ?>" data-tab="input-details" role="tab" tabindex="0" aria-selected="<?php echo (!isset($_GET['active_tab']) || $_GET['active_tab'] === 'input-details') ? 'true' : 'false'; ?>">Input Receipt Details</span>
+            <span class="tab-link<?php if (isset($_GET['active_tab']) && $_GET['active_tab'] === 'generate-summary') echo ' active'; ?>" data-tab="generate-summary" role="tab" tabindex="0" aria-selected="<?php echo (isset($_GET['active_tab']) && $_GET['active_tab'] === 'generate-summary') ? 'true' : 'false'; ?>">Generate Receipt Summary</span>
+            <span class="tab-link<?php if (isset($_GET['active_tab']) && $_GET['active_tab'] === 'receipt-history') echo ' active'; ?>" data-tab="receipt-history" role="tab" tabindex="0" aria-selected="<?php echo (isset($_GET['active_tab']) && $_GET['active_tab'] === 'receipt-history') ? 'true' : 'false'; ?>">Receipt History</span>
         </div>
 
-        <div class="tab-content active" id="input-details" role="tabpanel" tabindex="0">
-            <?php if ($success): ?>
-                <h2>Receipt information submitted successfully!</h2>
-                <br>
-                <a href="receipt_info.php">Add another receipt</a>
-            <?php else: ?>
-                <?php if ($error): ?>
-                    <div style="color:red;"><?php echo htmlspecialchars($error); ?></div>
+        <div class="tab-content<?php if ((!isset($_GET['active_tab'])) || $_GET['active_tab'] === 'input-details') echo ' active'; ?>" id="input-details" role="tabpanel" tabindex="0">
+            <form action="receipt_info.php" method="POST">
+                <input type="hidden" name="action" value="add" />
+                <label>Store Receipts</label>
+                <p class="desc">Input receipt details here!</p><br>
+
+                <?php if ($successMessage && isset($_GET['active_tab']) && $_GET['active_tab'] === 'input-details'): ?>
+                    <div style="color: green; font-weight: bold; margin-bottom: 1em;">
+                        <?php echo htmlspecialchars($successMessage); ?>
+                    </div>
                 <?php endif; ?>
 
-                <form action="receipt_info.php" method="POST">
-                    <input type="hidden" name="action" value="add" />
-                    <div class="form first">
-                        <div class="details personal">
-                            <div class="fields">
-                                <div class="input-field">
-                                    <label>Reference Number</label>
-                                    <input type="text" name="id" placeholder="Enter PK reference number" value="<?php echo isset($_POST['id']) ? htmlspecialchars($_POST['id']) : ''; ?>" required>
-                                </div><br>
-                                <div class="input-field">
-                                    <label>Client ID</label>
-                                    <input type="text" name="client_id" placeholder="Enter client id" value="<?php echo isset($_POST['client_id']) ? htmlspecialchars($_POST['client_id']) : ''; ?>" required>
-                                </div><br>
-                                <div class="input-field">
-                                    <label>Supplier</label>
-                                    <input type="text" name="supplier" placeholder="Name of Supplier" value="<?php echo isset($_POST['supplier']) ? htmlspecialchars($_POST['supplier']) : ''; ?>" required>
-                                </div><br>
-                                <div class="input-field">
-                                    <label>Date</label>
-                                    <input type="date" name="receipt_date" value="<?php echo isset($_POST['receipt_date']) ? htmlspecialchars($_POST['receipt_date']) : ''; ?>" required>
-                                </div><br>
-                                <div class="input-field">
-                                    <label>Total Amount</label>
-                                    <input type="number" name="total" step="0.01" placeholder="Enter total amount" value="<?php echo isset($_POST['total']) ? htmlspecialchars($_POST['total']) : ''; ?>" required>
-                                </div><br>
-                                <input type="submit" value="Save Changes" />
-                            </div>
-                        </div>
+                <?php if ($error && isset($_GET['active_tab']) && $_GET['active_tab'] === 'input-details'): ?>
+                    <div style="color: red; margin-bottom: 1em;">
+                        <?php echo htmlspecialchars($error); ?>
                     </div>
-                </form>
+                <?php endif; ?>
+
+
+                <div class="input-field">
+                    <label>Client ID</label>
+                    <input type="text" name="client_id" placeholder="Enter client id" value="<?php echo isset($_POST['client_id']) ? htmlspecialchars($_POST['client_id']) : ''; ?>" required>
+                </div><br>
+
+                <div class="input-field">
+                    <label>Reference Number</label>
+                    <input type="text" name="id" placeholder="Enter PK reference number" value="<?php echo isset($_POST['id']) ? htmlspecialchars($_POST['id']) : ''; ?>" required>
+                </div><br>
+
+                <div class="input-field">
+                    <label>Supplier</label>
+                    <input type="text" name="supplier" placeholder="Name of Supplier" value="<?php echo isset($_POST['supplier']) ? htmlspecialchars($_POST['supplier']) : ''; ?>" required>
+                </div><br>
+
+                <div class="input-field">
+                    <label>Date</label>
+                    <input type="date" name="receipt_date" value="<?php echo isset($_POST['receipt_date']) ? htmlspecialchars($_POST['receipt_date']) : ''; ?>" required>
+                </div><br>
+
+                <div class="input-field">
+                    <label>Total Amount</label>
+                    <input type="number" name="total" step="0.01" placeholder="Enter total amount" value="<?php echo isset($_POST['total']) ? htmlspecialchars($_POST['total']) : ''; ?>" required>
+                </div><br>
+
+                <input type="submit" value="Add Receipt" />
+            </form>
+        </div>
+        
+        <div class="tab-content<?php if (isset($_GET['active_tab']) && $_GET['active_tab'] === 'generate-summary') echo ' active'; ?>" id="generate-summary" role="tabpanel" tabindex="0">
+            <form action="receipt_info.php" method="GET" id="summary-form">
+                <label>Receipt Summary Generator</label>
+                <p class="desc">Generate a summary using chosen timestamps here!</p><br>
+
+                <?php if ($successMessage && isset($_GET['active_tab']) && $_GET['active_tab'] === 'generate-summary'): ?>
+                    <div style="color: green; font-weight: bold; margin-bottom: 1em;">
+                        <?php echo htmlspecialchars($successMessage); ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($error && isset($_GET['active_tab']) && $_GET['active_tab'] === 'generate-summary'): ?>
+                    <div style="color: red; margin-bottom: 1em;">
+                        <?php echo htmlspecialchars($error); ?>
+                    </div>
+                <?php endif; ?>
+
+                <input type="hidden" name="active_tab" value="generate-summary">
+                <div class="input-field">
+                    <input type="text" name="client_id" placeholder="Enter client id to generate summary from" value="<?php echo isset($_GET['client_id']) ? htmlspecialchars($_GET['client_id']) : ''; ?>" required>
+                </div><br>
+
+                <label>Choose Frequency</label>
+                <select name="summary_type" id="summary-type" onchange="toggleSummaryOptions()" required>
+                    <option value="">Select Summary Type</option>
+                    <option value="annual" <?php if(isset($_GET['summary_type']) && $_GET['summary_type']=='annual') echo 'selected'; ?>>Annual</option>
+                    <option value="quarterly" <?php if(isset($_GET['summary_type']) && $_GET['summary_type']=='quarterly') echo 'selected'; ?>>Quarterly</option>
+                    <option value="monthly" <?php if(isset($_GET['summary_type']) && $_GET['summary_type']=='monthly') echo 'selected'; ?>>Monthly</option>
+                    <option value="custom" <?php if(isset($_GET['summary_type']) && $_GET['summary_type']=='custom') echo 'selected'; ?>>Custom Range</option>
+                </select>
+
+                <div id="annual-options" style="display:none;">
+                    <label for="annual_year">Select Year:</label>
+                    <select id="annual_year" name="year">
+                        <?php
+                        $currentYear = date("Y");
+                        for ($year = 2020; $year <= $currentYear; $year++) {
+                            echo "<option value=\"$year\"";
+                            if(isset($_GET['year']) && $_GET['year']==$year && $_GET['summary_type']=='annual') echo ' selected';
+                            echo ">$year</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+
+                <div id="quarterly-options" style="display:none;">
+                    <label for="quarterly_year">Select Year:</label>
+                    <select id="quarterly_year" name="year">
+                        <?php
+                        for ($year = 2020; $year <= $currentYear; $year++) {
+                            echo "<option value=\"$year\"";
+                            if(isset($_GET['year']) && $_GET['year']==$year && $_GET['summary_type']=='quarterly') echo ' selected';
+                            echo ">$year</option>";
+                        }
+                        ?>
+                    </select>
+                    <label for="quarter">Quarter:</label>
+                    <select id="quarter" name="quarter">
+                        <option value="1" <?php if(isset($_GET['quarter']) && $_GET['quarter']=='1') echo 'selected'; ?>>Q1 (Jan-Mar)</option>
+                        <option value="2" <?php if(isset($_GET['quarter']) && $_GET['quarter']=='2') echo 'selected'; ?>>Q2 (Apr-Jun)</option>
+                        <option value="3" <?php if(isset($_GET['quarter']) && $_GET['quarter']=='3') echo 'selected'; ?>>Q3 (Jul-Sep)</option>
+                        <option value="4" <?php if(isset($_GET['quarter']) && $_GET['quarter']=='4') echo 'selected'; ?>>Q4 (Oct-Dec)</option>
+                    </select>
+                </div>
+
+                <div id="monthly-options" style="display:none;">
+                    <label for="monthly_year">Select Year:</label>
+                    <select id="monthly_year" name="year">
+                        <?php
+                        for ($year = 2020; $year <= $currentYear; $year++) {
+                            echo "<option value=\"$year\"";
+                            if(isset($_GET['year']) && $_GET['year']==$year && $_GET['summary_type']=='monthly') echo ' selected';
+                            echo ">$year</option>";
+                        }
+                        ?>
+                    </select>
+                    <label for="month">Month:</label>
+                    <select id="month" name="month">
+                        <?php
+                        for ($m = 1; $m <= 12; $m++) {
+                            $monthVal = str_pad($m, 2, "0", STR_PAD_LEFT);
+                            $monthName = date("F", mktime(0, 0, 0, $m, 10));
+                            echo "<option value=\"$monthVal\"";
+                            if(isset($_GET['month']) && $_GET['month']==$monthVal) echo ' selected';
+                            echo ">$monthName</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+
+                <div id="custom-options" style="display:none;">
+                    <label for="from_date">From:</label>
+                    <input type="date" id="from_date" name="from_date" value="<?php echo isset($_GET['from_date']) ? htmlspecialchars($_GET['from_date']) : ''; ?>">
+                    <label for="to_date">To:</label>
+                    <input type="date" id="to_date" name="to_date" value="<?php echo isset($_GET['to_date']) ? htmlspecialchars($_GET['to_date']) : ''; ?>">
+                </div>
+
+                <input type="submit" name="generate_summary" value="Generate Summary"><br><br>
+            </form>
+
+            <?php if (isset($_GET['generate_summary']) && $client_id && $summary_type && !$error): ?>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Total Number of Receipts</th>
+                            <th>Total Amount of All Receipts</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><?php echo htmlspecialchars($total_receipts); ?></td>
+                            <td><?php echo htmlspecialchars(number_format($total_amount, 2)); ?></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Receipt ID</th>
+                            <th>Supplier</th>
+                            <th>Date</th>
+                            <th>Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($summary_receipts)): ?>
+                            <?php foreach ($summary_receipts as $receipt): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($receipt['id']); ?></td>
+                                    <td><?php echo htmlspecialchars($receipt['supplier']); ?></td>
+                                    <td><?php echo htmlspecialchars($receipt['receipt_date']); ?></td>
+                                    <td><?php echo htmlspecialchars(number_format($receipt['total'], 2)); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
             <?php endif; ?>
         </div>
 
-        <div class="tab-content" id="generate-summary" role="tabpanel" tabindex="0">
-            <h2>Receipt Summary Generator</h2>
-            <p>Generate a summary of receipts here!</p>
-            <form action="receipt_info.php" method="GET">
-                <button type="submit" class="submit">
-                    <span class="btnText">Generate Summary</span>
-                </button>
-            </form>
-        </div>
 
-        <div class="tab-content" id="receipt-history" role="tabpanel" tabindex="0">
-            <h2>Receipt History</h2>
-            <p>View the history of added receipts here!</p>
+
+        <div class="tab-content<?php if (isset($_GET['active_tab']) && $_GET['active_tab'] === 'receipt-history') echo ' active'; ?>" id="receipt-history" role="tabpanel" tabindex="0">
+            <label>Receipt History</label>
+            <p class="desc">View the history of added receipts here!</p><br>
+
+            <?php if ($successMessage && isset($_GET['active_tab']) && $_GET['active_tab'] === 'receipt-history'): ?>
+                <div style="color: green; font-weight: bold; margin-bottom: 1em;">
+                    <?php echo htmlspecialchars($successMessage); ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($error && isset($_GET['active_tab']) && $_GET['active_tab'] === 'receipt-history'): ?>
+                <div style="color: red; margin-bottom: 1em;">
+                    <?php echo htmlspecialchars($error); ?>
+                </div>
+            <?php endif; ?>
+
             <form action="receipt_info.php" method="GET" style="margin-bottom: 1em;">
+                <input type="hidden" name="active_tab" value="receipt-history">
                 <input type="text" name="client_id" placeholder="Enter client ID to view history" value="<?php echo isset($_GET['client_id']) ? htmlspecialchars($_GET['client_id']) : ''; ?>" required>
-                <button type="submit" name="view_history" class="submit">
-                    <span class="btnText">View Receipt History</span>
+                <button type="submit" name="view_history">
+                    View Receipt History
                 </button>
             </form>
+
             <?php if (!empty($receipts)): ?>
                 <table>
                     <thead>
                         <tr>
-                            <th>Reference Number</th>
+                            <th>Receipt ID</th>
                             <th>Supplier</th>
                             <th>Date</th>
                             <th>Total Amount</th>
@@ -226,14 +505,14 @@ include('Component/nav-head.php');
                     </tbody>
                 </table>
             <?php elseif (isset($_GET['view_history'])): ?>
-                <p>No receipts found for this client ID.</p>
+                <p class="desc">No receipts found for this client.</p>
             <?php endif; ?>
         </div>
+
 
     </main>
 </body>
 </html>
 
 <?php $conn->close(); ?>
-
 
