@@ -51,7 +51,7 @@ include('Component/nav-head.php');
     <main>
         <section>
             <div id="Nav-container">
-                <h1>JMCYK Client Management System</h1>
+                <h1>JMCYK Client & Receipts Management System</h1>
             </div>
         </section>
         <h1>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h1><br>

@@ -55,7 +55,7 @@ include('Component/nav-head.php');
     <main>
             <section>
                 <div id="Nav-container">
-                    <h1>JMCYK Client Receipt Management System</h1>
+                    <h1>JMCYK Client & Receipts Management System</h1>
                 </div>
             </section>
 
