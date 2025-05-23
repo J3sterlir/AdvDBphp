@@ -29,6 +29,10 @@ if (isset($_GET['success'])) {
     }
 }
 
+// Determine active tab for UI tab selection and error display
+$active_tab = isset($_GET['active_tab']) ? $_GET['active_tab'] : 'input-details';
+
+// Helper function to check client existence
 function clientExists($conn, $client_id) {
     $stmt = $conn->prepare("SELECT COUNT(*) FROM users WHERE id = ? AND type_id = 3");
     if (!$stmt) {
@@ -46,114 +50,117 @@ function clientExists($conn, $client_id) {
     return $exists > 0;
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] === 'add') {
-    $client_id = trim($_POST['client_id']);
-    if (!$client_id || !clientExists($conn, $client_id)) {
-        $error = "User ID is not from a client or user does not exist.";
-    }
-}
-
 if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET['generate_summary'])) {
     $client_id = trim($_GET['client_id'] ?? '');
     if (!$client_id || !clientExists($conn, $client_id)) {
         $error = "User ID is not from a client or user does not exist.";
     }
+    $active_tab = 'generate-summary'; // Show summary tab on generation
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] === 'add') {
-    $client_id = trim($_POST['client_id']);
-    if (!$client_id || !clientExists($conn, $client_id)) {
-        $error = "User  ID is not from a client or user does not exist.";
-    } else {
-        // Proceed with adding the receipt only if there is no error
-        $id = trim($_POST['id']);
-        $supplier = trim($_POST['supplier']);
-        $receipt_date = trim($_POST['receipt_date']);
-        $total = floatval($_POST['total']);
-
-        if ($client_id && $id && $supplier && $receipt_date && $total > 0) {
-            $stmt = $conn->prepare("INSERT INTO receipts (id, client_id, supplier, receipt_date, total) VALUES (?, ?, ?, ?, ?)");
-            $stmt->bind_param("ssssd", $id, $client_id, $supplier, $receipt_date, $total);
-
-            if ($stmt->execute()) {
-                header("Location: receipt_info.php?client_id=" . urlencode($client_id) . "&active_tab=receipt-history&success=add&view_history=1");
-                exit();
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (isset($_POST['action'])) {
+        // Reset error
+        $error = "";
+        if ($_POST['action'] === 'add') {
+            $client_id = trim($_POST['client_id'] ?? '');
+            if (!$client_id || !clientExists($conn, $client_id)) {
+                $error = "User ID is not from a client or user does not exist.";
             } else {
-                $error = "Database error: " ;
+                $id = trim($_POST['id'] ?? '');
+                $supplier = trim($_POST['supplier'] ?? '');
+                $receipt_date = trim($_POST['receipt_date'] ?? '');
+                $total = isset($_POST['total']) ? floatval($_POST['total']) : 0;
+
+                if ($client_id && $id && $supplier && $receipt_date && $total > 0) {
+                    $stmt = $conn->prepare("INSERT INTO receipts (id, client_id, supplier, receipt_date, total) VALUES (?, ?, ?, ?, ?)");
+                    $stmt->bind_param("ssssd", $id, $client_id, $supplier, $receipt_date, $total);
+
+                    if ($stmt->execute()) {
+                        $stmt->close();
+                        header("Location: receipt_info.php?client_id=" . urlencode($client_id) . "&active_tab=receipt-history&success=add&view_history=1");
+                        exit();
+                    } else {
+                        $error = "Database error: " . $stmt->error;
+                    }
+                    $stmt->close();
+                } else {
+                    $error = "Please fill in all fields and enter a valid amount.";
+                }
             }
-            $stmt->close();
-        } else {
-            $error = "Please fill in all fields and enter a valid amount.";
-        }
-    }
-}
+            // Set active tab so that error is shown in input tab
+            $active_tab = 'input-details';
+        } elseif ($_POST['action'] === 'edit') {
+            // existing edit logic unchanged, but add setting active_tab similarly
+            $edit_id = trim($_POST['edit_id'] ?? '');
+            $edit_supplier = isset($_POST['edit_supplier']) ? trim($_POST['edit_supplier']) : '';
+            $edit_receipt_date = isset($_POST['edit_receipt_date']) ? trim($_POST['edit_receipt_date']) : '';
+            $edit_total = isset($_POST['edit_total']) ? floatval($_POST['edit_total']) : 0;
 
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'edit') {
-    $edit_id = trim($_POST['edit_id'] ?? '');
-    $edit_supplier = isset($_POST['edit_supplier']) ? trim($_POST['edit_supplier']) : '';
-    $edit_receipt_date = isset($_POST['edit_receipt_date']) ? trim($_POST['edit_receipt_date']) : '';
-    $edit_total = isset($_POST['edit_total']) ? floatval($_POST['edit_total']) : 0;
+            if ($edit_id && $edit_supplier && $edit_receipt_date && $edit_total > 0) {
+                $stmtClient = $conn->prepare("SELECT client_id FROM receipts WHERE id = ?");
+                $stmtClient->bind_param("s", $edit_id);
+                $stmtClient->execute();
+                $resultClient = $stmtClient->get_result();
+                $client_id_row = $resultClient->fetch_assoc();
+                $stmtClient->close();
+                $client_id = $client_id_row['client_id'] ?? '';
 
-    if ($edit_id && $edit_supplier && $edit_receipt_date && $edit_total > 0) {
-        $stmtClient = $conn->prepare("SELECT client_id FROM receipts WHERE id = ?");
-        $stmtClient->bind_param("s", $edit_id);
-        $stmtClient->execute();
-        $resultClient = $stmtClient->get_result();
-        $client_id_row = $resultClient->fetch_assoc();
-        $stmtClient->close();
-        $client_id = $client_id_row['client_id'] ?? '';
+                if (clientExists($conn, $client_id)) {
+                    $stmt = $conn->prepare("UPDATE receipts SET supplier = ?, receipt_date = ?, total = ? WHERE id = ?");
+                    $stmt->bind_param("ssds", $edit_supplier, $edit_receipt_date, $edit_total, $edit_id);
 
-        if (clientExists($conn, $client_id)) {
-            $stmt = $conn->prepare("UPDATE receipts SET supplier = ?, receipt_date = ?, total = ? WHERE id = ?");
-            $stmt->bind_param("ssds", $edit_supplier, $edit_receipt_date, $edit_total, $edit_id);
-
-            if ($stmt->execute()) {
-                header("Location: receipt_info.php?client_id=" . urlencode($client_id) . "&active_tab=receipt-history&success=edit&view_history=1");
-                exit();
+                    if ($stmt->execute()) {
+                        $stmt->close();
+                        header("Location: receipt_info.php?client_id=" . urlencode($client_id) . "&active_tab=receipt-history&success=edit&view_history=1");
+                        exit();
+                    } else {
+                        $error = "Database error (update): " . $stmt->error;
+                    }
+                    $stmt->close();
+                } else {
+                    $error = "User ID is not from a client or user does not exist.";
+                }
             } else {
-                $error = "Database error (update): " . $stmt->error;
+                $error = "Please fill in all fields when editing and enter a valid amount.";
             }
-            $stmt->close();
-        } else {
-            $error = "User  ID is not from a client or user does not exist.";
-        }
-    } else {
-        $error = "Please fill in all fields when editing and enter a valid amount.";
-    }
-}
+            $active_tab = 'receipt-history';
+        } elseif ($_POST['action'] === 'delete') {
+            $delete_id = trim($_POST['delete_id'] ?? '');
+            if ($delete_id) {
+                $stmtClient = $conn->prepare("SELECT client_id FROM receipts WHERE id = ?");
+                $stmtClient->bind_param("s", $delete_id);
+                $stmtClient->execute();
+                $resultClient = $stmtClient->get_result();
+                $client_id_row = $resultClient->fetch_assoc();
+                $stmtClient->close();
+                $client_id = $client_id_row['client_id'] ?? '';
 
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'delete') {
-    $delete_id = trim($_POST['delete_id']);
-    if ($delete_id) {
-        $stmtClient = $conn->prepare("SELECT client_id FROM receipts WHERE id = ?");
-        $stmtClient->bind_param("s", $delete_id);
-        $stmtClient->execute();
-        $resultClient = $stmtClient->get_result();
-        $client_id_row = $resultClient->fetch_assoc();
-        $stmtClient->close();
-        $client_id = $client_id_row['client_id'] ?? '';
+                if (clientExists($conn, $client_id)) {
+                    $stmt = $conn->prepare("DELETE FROM receipts WHERE id = ?");
+                    $stmt->bind_param("s", $delete_id);
 
-        if (clientExists($conn, $client_id)) {
-            $stmt = $conn->prepare("DELETE FROM receipts WHERE id = ?");
-            $stmt->bind_param("s", $delete_id);
-
-            if ($stmt->execute()) {
-                header("Location: receipt_info.php?client_id=" . urlencode($client_id) . "&active_tab=receipt-history&success=delete&view_history=1");
-                exit();
+                    if ($stmt->execute()) {
+                        $stmt->close();
+                        header("Location: receipt_info.php?client_id=" . urlencode($client_id) . "&active_tab=receipt-history&success=delete&view_history=1");
+                        exit();
+                    } else {
+                        $error = "Database error (delete): " . $stmt->error;
+                    }
+                    $stmt->close();
+                } else {
+                    $error = "User ID is not from a client or user does not exist.";
+                }
             } else {
-                $error = "Database error (delete): " . $stmt->error;
+                $error = "Invalid receipt ID for deletion.";
             }
-            $stmt->close();
-        } else {
-            $error = "User  ID is not from a client or user does not exist.";
+            $active_tab = 'receipt-history';
         }
-    } else {
-        $error = "Invalid receipt ID for deletion.";
     }
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['view_history'])) {
-    $client_id = trim($_GET['client_id']);
+    $client_id = trim($_GET['client_id'] ?? '');
     if ($client_id) {
         if (clientExists($conn, $client_id)) {
             $stmt = $conn->prepare("SELECT id, supplier, receipt_date, total, client_id FROM receipts WHERE client_id = ?");
@@ -163,12 +170,15 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['view_history'])) {
             $receipts = $result->fetch_all(MYSQLI_ASSOC);
             $stmt->close();
         } else {
-            $error = "User  ID is not from a client or user does not exist.";
+            $error = "User ID is not from a client or user does not exist.";
         }
     } else {
         $error = "Please provide a valid client ID.";
     }
+    $active_tab = 'receipt-history';
 }
+
+// The rest of code for summary generation stays the same...
 
 $summary_receipts = [];
 $total_receipts = 0;
@@ -239,7 +249,7 @@ include('Component/nav-head.php');
     <link rel="stylesheet" href="css/Dashboard.css">
     <link rel="stylesheet" href="css/TopNav.css">
     <link rel="stylesheet" href="css/receipt_info.css">
-    <script src="Dashboard.js"></script>
+    <script src="js/Dashboard.js"></script>
     <script src="js/receipt_info.js"></script>
 </head>
     <style>
@@ -260,29 +270,30 @@ include('Component/nav-head.php');
         <p class type="sub-title">Manage receipts here!</p><br>
 
         <div class="tabs" role="tablist" aria-label="Receipt Tabs">
-            <span class="tab-link<?php if ((!isset($_GET['active_tab'])) || $_GET['active_tab'] === 'input-details') echo ' active'; ?>" data-tab="input-details" role="tab" tabindex="0" aria-selected="<?php echo (!isset($_GET['active_tab']) || $_GET['active_tab'] === 'input-details') ? 'true' : 'false'; ?>">Input Receipt Details</span>
-            <span class="tab-link<?php if (isset($_GET['active_tab']) && $_GET['active_tab'] === 'generate-summary') echo ' active'; ?>" data-tab="generate-summary" role="tab" tabindex="0" aria-selected="<?php echo (isset($_GET['active_tab']) && $_GET['active_tab'] === 'generate-summary') ? 'true' : 'false'; ?>">Generate Receipt Summary</span>
-            <span class="tab-link<?php if (isset($_GET['active_tab']) && $_GET['active_tab'] === 'receipt-history') echo ' active'; ?>" data-tab="receipt-history" role="tab" tabindex="0" aria-selected="<?php echo (isset($_GET['active_tab']) && $_GET['active_tab'] === 'receipt-history') ? 'true' : 'false'; ?>">Receipt History</span>
+            <span class="tab-link<?php if ($active_tab === 'input-details') echo ' active'; ?>" data-tab="input-details" role="tab" tabindex="0" aria-selected="<?php echo ($active_tab === 'input-details') ? 'true' : 'false'; ?>">Input Receipt Details</span>
+            <span class="tab-link<?php if ($active_tab === 'generate-summary') echo ' active'; ?>" data-tab="generate-summary" role="tab" tabindex="0" aria-selected="<?php echo ($active_tab === 'generate-summary') ? 'true' : 'false'; ?>">Generate Receipt Summary</span>
+            <span class="tab-link<?php if ($active_tab === 'receipt-history') echo ' active'; ?>" data-tab="receipt-history" role="tab" tabindex="0" aria-selected="<?php echo ($active_tab === 'receipt-history') ? 'true' : 'false'; ?>">Receipt History</span>
         </div>
 
-        <div class="tab-content<?php if ((!isset($_GET['active_tab'])) || $_GET['active_tab'] === 'input-details') echo ' active'; ?>" id="input-details" role="tabpanel" tabindex="0">
+        <div class="tab-content<?php if ($active_tab === 'input-details') echo ' active'; ?>" id="input-details" role="tabpanel" tabindex="0">
             <form action="receipt_info.php" method="POST">
-                <input type="hidden" name="action" value="add" />
+                
                 <label>Store Receipts</label>
                 <p class="desc">Input receipt details here!</p><br>
 
-                <?php if ($successMessage && isset($_GET['active_tab']) && $_GET['active_tab'] === 'input-details'): ?>
+                <?php if ($successMessage && $active_tab === 'input-details'): ?>
                     <div style="color: green; font-weight: bold; margin-bottom: 1em;">
                         <?php echo htmlspecialchars($successMessage); ?>
                     </div>
                 <?php endif; ?>
 
-                <?php if ($error && isset($_GET['active_tab']) && $_GET['active_tab'] === 'input-details'): ?>
+                <?php if ($error && $active_tab === 'input-details'): ?>
                     <div style="color: red; margin-bottom: 1em;">
                         <?php echo htmlspecialchars($error); ?>
                     </div>
                 <?php endif; ?>
-
+            
+                <input type="hidden" name="action" value="add" />
 
                 <div class="input-field">
                     <label>Client ID</label>
@@ -309,10 +320,10 @@ include('Component/nav-head.php');
                     <input type="number" name="total" step="0.01" placeholder="Enter total amount" value="<?php echo isset($_POST['total']) ? htmlspecialchars($_POST['total']) : ''; ?>" required>
                 </div><br>
 
-                <input type="submit" value="Add Receipt" />
+                <input type="submit" name="input-details" value="Add Receipt" />
             </form>
         </div>
-        
+
         <div class="tab-content<?php if (isset($_GET['active_tab']) && $_GET['active_tab'] === 'generate-summary') echo ' active'; ?>" id="generate-summary" role="tabpanel" tabindex="0">
             <form action="receipt_info.php" method="GET" id="summary-form">
                 <label>Receipt Summary Generator</label>
@@ -510,15 +521,13 @@ include('Component/nav-head.php');
                         <?php endforeach; ?>
                     </tbody>
                 </table>
-            <?php elseif (isset($_GET['view_history'])): ?>
-                <p class="desc">No receipts found for this client.</p>
+                <?php elseif (isset($_GET['view_history'])): ?>
+                    <p class="desc">No receipts found for this user.</p>
             <?php endif; ?>
         </div>
-
 
     </main>
 </body>
 </html>
 
 <?php $conn->close(); ?>
-

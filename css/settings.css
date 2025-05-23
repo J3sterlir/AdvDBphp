@@ -1,13 +1,5 @@
-#sidebar ul li.activesettings a {
-    color: var(--accent-clr);
-    background-color: var(--hover-clr);
-
-    svg{
-        fill: var(--accent-clr); 
-    }
-}
-
 .settings-form {
+
     max-width: 5000px;
     margin: auto;
     padding: 20px;

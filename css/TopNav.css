@@ -19,6 +19,7 @@ html{
 }
 #Nav-container{
     background: #ffffff;
+    background: linear-gradient(90deg,rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.83) 82%, rgba(255, 255, 255, 0) 100%);
     border-radius: none;
     margin-bottom: 50px; margin-top: -30.5px; margin-left: -32px;
     position: sticky;

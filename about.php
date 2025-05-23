@@ -42,15 +42,7 @@ include('Component/nav-head.php');
     <link rel="stylesheet" href="css/Dashboard.css">
     <link rel="stylesheet" href="css/TopNav.css">
     <script src="js/Dashboard.js" async defer></script>
-    <style>
-        #sidebar ul li.activeabout a {
-            color: var(--accent-clr);
-            background-color: var(--hover-clr);
-        }
-        #sidebar ul li.activeabout a svg {
-            fill: var(--accent-clr);
-        }
-    </style>
+
 </head>
 <body>
     <main>
@@ -62,7 +54,7 @@ include('Component/nav-head.php');
 
         <div class="container">
             <h1>About</h1><br>
-            <p>JMCYK Bookkeeping Services is a company that manages financial transactions of taxpayers.</p>
+            <p>JMCYK Bookkeeping Services, a company that manages financial transactions of taxpayers. Located at 2/F McKay Building, Zone 5, Corner Panganiban Drive, Concepcion Pequeña, Naga City and is owned by Mrs. Maricel M. Brioso</p>
         </div>
     </main> 
 </body>
