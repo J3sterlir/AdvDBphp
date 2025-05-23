@@ -41,6 +41,12 @@ include('Component/nav-head.php');
     <script src="js/Dashboard.js" async defer></script>
     
 </head>
+        <style>
+        #sidebar ul li.activeprofile a {
+            color: var(--accent-clr);
+            background-color: var(--hover-clr);
+        }
+        </style>
 <body>
     <main>
         <section>

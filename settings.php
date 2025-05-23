@@ -122,6 +122,12 @@ include('Component/nav-head.php');
     <script src="js/Dashboard.js" async defer></script>
     <script src="js/settings.js"></script>
 </head>
+        <style>
+        #sidebar ul li.activesettings a {
+            color: var(--accent-clr);
+            background-color: var(--hover-clr);
+        }
+        </style>
 <body>
     <main>
         <section>
