@@ -36,17 +36,6 @@ include('Component/nav-head.php');
         <link rel="stylesheet" href="css/TopNav.css">
         <script src="js/Dashboard.js" async defer></script>
         
-        <style>
-            #sidebar ul li.activehome a{
-                color: var(--accent-clr);
-                background-color: var(--hover-clr);
-                
-                svg{
-                    fill: var(--accent-clr);
-                    
-                }
-            }
-        </style>
     </head>
     <body>
         

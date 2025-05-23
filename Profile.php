@@ -4,7 +4,6 @@ session_start();
 include("database.php");
 $conn = mysqli_connect($db_server, $db_user, $db_pass, $db_name);
 
-// Check if the connection was successful
 if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
 }
@@ -40,12 +39,7 @@ include('Component/nav-head.php');
     <link rel="stylesheet" href="css/Dashboard.css">
     <link rel="stylesheet" href="css/TopNav.css">
     <script src="js/Dashboard.js" async defer></script>
-    <style>
-        #sidebar ul li.activeprofile a {
-            color: var(--accent-clr);
-            background-color: var(--hover-clr);
-        }
-    </style>
+    
 </head>
 <body>
     <main>
@@ -54,11 +48,6 @@ include('Component/nav-head.php');
                 <h1>JMCYK Client Management System</h1>
             </div>
         </section>
-        <h1>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h1><br>
-        <header>
-            <hr>
-            <br>
-        </header>
 
         <div class="container">
             <h3>Profile Details:</h3><br>
