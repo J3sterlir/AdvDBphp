@@ -34,7 +34,7 @@ $active_tab = isset($_GET['active_tab']) ? $_GET['active_tab'] : 'input-details'
 
 // Helper function to check client existence
 function clientExists($conn, $client_id) {
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM users WHERE id = ? AND type_id = 3");
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM users WHERE id = ? AND type_id = 3"); //count how many users matches the given id and type of id or (3 being a client user)
     if (!$stmt) {
         error_log("Prepare failed: " . $conn->error);
         return false;
@@ -73,6 +73,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $total = isset($_POST['total']) ? floatval($_POST['total']) : 0;
 
                 if ($client_id && $id && $supplier && $receipt_date && $total > 0) {
+                    //inserting receipts to receipts table with parameters such as id... values are given by the employee
                     $stmt = $conn->prepare("INSERT INTO receipts (id, client_id, supplier, receipt_date, total) VALUES (?, ?, ?, ?, ?)");
                     $stmt->bind_param("ssssd", $id, $client_id, $supplier, $receipt_date, $total);
 
@@ -107,6 +108,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $client_id = $client_id_row['client_id'] ?? '';
 
                 if (clientExists($conn, $client_id)) {
+                    //Update receipts and set the following parameters supplier,receipt_date.....
                     $stmt = $conn->prepare("UPDATE receipts SET supplier = ?, receipt_date = ?, total = ? WHERE id = ?");
                     $stmt->bind_param("ssds", $edit_supplier, $edit_receipt_date, $edit_total, $edit_id);
 
@@ -128,6 +130,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } elseif ($_POST['action'] === 'delete') {
             $delete_id = trim($_POST['delete_id'] ?? '');
             if ($delete_id) {
+                //Selecting client id from receipts where id is given by the employee
                 $stmtClient = $conn->prepare("SELECT client_id FROM receipts WHERE id = ?");
                 $stmtClient->bind_param("s", $delete_id);
                 $stmtClient->execute();
@@ -137,6 +140,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $client_id = $client_id_row['client_id'] ?? '';
 
                 if (clientExists($conn, $client_id)) {
+                    //delete the receipts referencing the given id by the employee
                     $stmt = $conn->prepare("DELETE FROM receipts WHERE id = ?");
                     $stmt->bind_param("s", $delete_id);
 
@@ -163,6 +167,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['view_history'])) {
     $client_id = trim($_GET['client_id'] ?? '');
     if ($client_id) {
         if (clientExists($conn, $client_id)) {
+            //select id... from receipts table condition where client is given by the employee
             $stmt = $conn->prepare("SELECT id, supplier, receipt_date, total, client_id FROM receipts WHERE client_id = ?");
             $stmt->bind_param("s", $client_id);
             $stmt->execute();
